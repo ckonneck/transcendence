@@ -4,11 +4,21 @@ const fastifyStatic = require('@fastify/static')
 
 fastify.register(fastifyStatic, {
   root: path.join(__dirname, '../frontend'),
-  prefix: '/', // Serve index.html at root
+  prefix: '/', // This will serve index.html at /
+})
+
+// Serve compiled TypeScript from /dist
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, '../dist'),
+  prefix: '/dist/', // JS files will be available at /dist/main.js, etc.
 })
 
 fastify.get('/api/hello', async (request, reply) => {
   return { message: 'Hello owowo server is live omagawd' }
+})
+
+fastify.get('/api/request', async (request, reply) => {
+  return { message: 'Response from server!' }
 })
 
 fastify.listen({ port: 3000, host: '0.0.0.0' }, err => {

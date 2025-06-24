@@ -1,12 +1,13 @@
-up:
+up: tsc
 	docker-compose up -d
+
+tsc:
+	npx tsc
 
 down:
 	docker-compose down --remove-orphans
 
-restart:
-	docker-compose down --remove-orphans
-	docker-compose up -d
+re: down tsc build up
 
 build:
 	docker-compose build
