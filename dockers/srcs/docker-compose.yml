@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  nginx:
+    build:
+      context: ../
+      dockerfile: srcs/requirements/nginx/Dockerfile
+    container_name: nginx
+    depends_on:
+      - wordpress
+      - mariadb
+    volumes:
+      - wp_vol:/var/www/html
+      - ../secrets:/run/secrets:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - inception
+    restart: unless-stopped
+
+  wordpress:
+    build:
+      context: ../
+      dockerfile: srcs/requirements/wordpress/Dockerfile
+    container_name: wp-php
+    depends_on:
+      - mariadb
+    volumes:
+      - wp_vol:/var/www/html
+      - ../secrets:/run/secrets:ro
+    networks:
+      - inception
+    environment:
+      WORDPRESS_DB_HOST: mariadb:3306
+    restart: unless-stopped
+
+  mariadb:
+    build:
+      context: ../
+      dockerfile: srcs/requirements/mariadb/Dockerfile
+    container_name: mariadb
+    volumes:
+      - wp_db:/var/lib/mysql
+      - ../secrets:/run/secrets:ro
+    networks:
+      - inception
+    restart: unless-stopped
+
+networks:
+  inception:
+    name: inception
+
+volumes:
+  wp_vol:
+    name: "wordpress"
+    driver_opts:
+      type: none
+      device: "/home/ckonneckuser/data/wp_files"
+      o: bind
+  wp_db:
+    name: "database"
+    driver_opts:
+      type: none
+      device: "/home/ckonneckuser/data/wp_db"
+      o: bind
+

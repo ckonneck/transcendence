@@ -1,0 +1,9 @@
+multiple player idea
+either a square for 4 people
+or 4 people mode where 2 players share 1 half of the stick
+ofc they can block each other to annoy each other
+could also extend that bit with more plaers, each time seperating the stick into more
+
+livechat module could be easily implemented similar to irc, with invite and private messages
+
+definitely do the cybersecurity module.
