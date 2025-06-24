@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fastify + Tailwind</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-center p-6">
+  <h1 class="text-4xl font-bold mb-4 text-blue-600">Hello from Tailwind CSS</h1>
+  <div id="response" class="mt-4 text-lg"></div>
+
+  <script>
+    fetch('/api/hello')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('response').textContent = data.message
+      })
+  </script>
+</body>
+</html>
+

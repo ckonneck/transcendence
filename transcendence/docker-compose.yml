@@ -1,0 +1,7 @@
+services:
+  fastify:
+    build: .
+    container_name: fastify
+    ports:
+      - "3000:3000"
+
