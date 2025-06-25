@@ -4,6 +4,43 @@
   <meta charset="UTF-8" />
   <title>Transcend the dance</title>
   <script src="https://cdn.tailwindcss.com"></script>
+   <style>
+    body {
+      margin: 0;
+      background: #111;
+      overflow: hidden;
+    }
+    #game {
+      position: relative;
+      width: 800px;
+      height: 500px;
+      margin: 40px auto;
+      background: black;
+      border: 2px solid white;
+    }
+    .paddle {
+      position: absolute;
+      width: 10px;
+      height: 100px;
+      background: rgb(161, 38, 38);
+      top: 200px;
+    }
+    #left-paddle {
+      left: 0;
+    }
+    #right-paddle {
+      right: 0;
+    }
+    #ball {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      left: 390px;
+      top: 240px;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 text-center p-6">
   <h1 class="text-4xl font-bold mb-4 text-blue-600">Hello frooooom Tailwind CSS</h1>
@@ -13,10 +50,34 @@
     Request
   </button>
   <div id="requestresponse" class="mt-2 text-lg text-gray-800"></div>
-<div id="boundary" style="width: 1200px; height: 800px;" class="bg-black relative mx-auto mt-8 overflow-hidden">
-  <div id="moving-block" style="width: 100px; height: 20px;" class="bg-red-500 absolute left-0 top-0 transition-all duration-100 z-10"></div>
-  <div id="white-ball" class="w-8 h-8 bg-white rounded-full absolute"></div>
+  <div id="game">
+    <div id="left-paddle" class="paddle"></div>
+    <div id="right-paddle" class="paddle"></div>
+    <div id="ball"></div>
   <script src="/dist/main.js"></script>
+</div>
 
+<!-- GIF container moved OUTSIDE the boundary -->
+<div id="gif-container">
+  <div class="tenor-gif-embed" data-postid="16620805826283067047" data-share-method="host" data-aspect-ratio="1" data-width="150">
+    <a href="https://tenor.com/view/bird-gif-16620805826283067047">Bird Sticker</a>from <a href="https://tenor.com/search/bird-stickers">Bird Stickers</a>
+  </div>
+</div>
+<script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+
+<style>
+
+  /* GIF container styles */
+  #gif-container {
+    width: 400px;
+    margin: 12px auto 0;  /* top margin and center horizontally */
+  }
+
+  /* Ensure gif fills container */
+  .tenor-gif-embed {
+    width: 100% !important;
+    height: auto !important;
+  }
+</style>
 </body>
 </html>
