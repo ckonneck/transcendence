@@ -8,13 +8,15 @@
 <body class="bg-gray-100 text-center p-6">
   <h1 class="text-4xl font-bold mb-4 text-blue-600">Hello frooooom Tailwind CSS</h1>
   <div id="helloresponse" class="mt-4 text-lg"></div>
-
+  <div id="keyboardresponse" class="mt-2 text-lg text-green-800"></div>
   <button id="requestBtn" class="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition mb-4">
     Request
   </button>
   <div id="requestresponse" class="mt-2 text-lg text-gray-800"></div>
-
-  <script src="/dist/main.js" type="module"></script>
+<div id="boundary" style="width: 1200px; height: 800px;" class="bg-black relative mx-auto mt-8 overflow-hidden">
+  <div id="moving-block" style="width: 100px; height: 20px;" class="bg-red-500 absolute left-0 top-0 transition-all duration-100 z-10"></div>
+  <div id="white-ball" class="w-8 h-8 bg-white rounded-full absolute"></div>
+  <script src="/dist/main.js"></script>
 
 </body>
 </html>

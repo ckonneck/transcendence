@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+  "build": "tsc --project config/tsconfig.json"
+},
+ "commenting": "here because json doesn't allow comments",
+    "THIS FILE": "\"typescript\" Installs the TypeScript compiler (as a dev dependency, even though it's under dependencies)",
+    "THIS FILE1": "\"build\" A shortcut to compile your TypeScript frontend using the config in config/tsconfig.json"
+}

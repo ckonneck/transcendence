@@ -8,5 +8,20 @@
   "dependencies": {
     "fastify": "^4.25.1",
     "@fastify/static": "^6.9.0"
+  },
+
+
+
+
+  
+  "_notes": {
+    "commenting": "here because json doesn't allow comments",
+    "THIS FILE": "Defines your project name and version.",
+    "THIS FILE1": "Specifies `server.js` as the main backend file.",
+    "THIS FILE2": " Adds a `start` script to launch the server.",
+    "THIS FILE3": " Declares dependencies needed to serve your Fastify backend and static files."
   }
 }
+
+
+

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "outDir": "../dist",              
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["../src/**/*"],
+  "exclude": ["../dist"],
+
+  "commenting": "here because json doesn't allow comments",
+    "THIS FILE": "this file configures how the TypeScript compiler behaves. it tells Typescript:",
+    "THIS FILE1": "what files to compile (src), where to put the output (dist) and how to compile them"
+}

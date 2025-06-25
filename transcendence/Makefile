@@ -2,7 +2,7 @@ up: tsc
 	docker-compose up -d
 
 tsc:
-	npx tsc
+	npx tsc --project config/tsconfig.json
 
 down:
 	docker-compose down --remove-orphans
