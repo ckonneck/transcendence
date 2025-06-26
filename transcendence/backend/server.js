@@ -21,7 +21,7 @@ fastify.get('/api/hello', async (request, reply) => { //Responds to GET requests
 })
 
 fastify.get('/api/request', async (request, reply) => {
-  return { message: 'Response from server!' } //same as above, for button
+  return { message: 'Request for a pizza accepted.\nPlease wait 3-5 Business days for delivery.' } //same as above, for button
 })
 
 fastify.listen({ port: 3000, host: '0.0.0.0' }, err => { //makes the server accessible, if startup fails, logs it

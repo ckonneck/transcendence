@@ -64,29 +64,116 @@ btn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* 
 //On failure, it shows a proper error message (based on the error object type)
 const keyboardResponseDiv = getElement('keyboardresponse');
 // Modular function to update the message
-function showKeyPressed(key) {
-    keyboardResponseDiv.textContent = `You pressed the "${key.toUpperCase()}" key!`;
-}
+// function showKeyPressed(key: string): void {
+//   keyboardResponseDiv.textContent = `You pressed the "${key.toUpperCase()}" key!`;
+// }
 // Global listener for any key
-document.addEventListener('keydown', (event) => {
-    showKeyPressed(event.key);
-});
+// document.addEventListener('keydown', (event: KeyboardEvent) => {
+//   showKeyPressed(event.key);
+// });
 const leftPaddle = document.getElementById('left-paddle');
 const rightPaddle = document.getElementById('right-paddle');
 const ball = document.getElementById('ball');
 const game = document.getElementById('game');
 let leftY = 200;
 let rightY = 200;
-const paddleSpeed = 5;
+let paddleSpeed = 5;
 let ballX = 390;
 let ballY = 240;
-let ballVX = 4;
-let ballVY = 3;
+const INITIAL_BALL_VX = 4;
+const INITIAL_BALL_VY = 3;
+let ballVX = INITIAL_BALL_VX;
+let ballVY = INITIAL_BALL_VY;
 const keys = {};
 document.addEventListener('keydown', e => keys[e.key] = true);
 document.addEventListener('keyup', e => keys[e.key] = false);
+let gameActive = false;
+let ballStarted = false;
+const startMessage = document.createElement('div');
+// Add these variables
+let leftScore = 0;
+let rightScore = 0;
+const leftScoreDisplay = document.createElement('div');
+const rightScoreDisplay = document.createElement('div');
+// Set up score displays
+function setupScoreDisplays() {
+    // Left score (Player 1)
+    leftScoreDisplay.className = 'text-3xl font-bold text-black';
+    leftScoreDisplay.style.position = 'absolute';
+    leftScoreDisplay.style.top = '150px';
+    leftScoreDisplay.style.left = '25%';
+    leftScoreDisplay.textContent = '0';
+    // Right score (Player 2)
+    rightScoreDisplay.className = 'text-3xl font-bold text-black';
+    rightScoreDisplay.style.position = 'absolute';
+    rightScoreDisplay.style.top = '150px';
+    rightScoreDisplay.style.right = '25%';
+    rightScoreDisplay.textContent = '0';
+    // Add to document
+    document.body.appendChild(leftScoreDisplay);
+    document.body.appendChild(rightScoreDisplay);
+}
+// Setup the start message
+function setupStartMessage() {
+    startMessage.innerHTML = 'Press SPACE to start<br>Use W and S keys and Up and Down<br>for moving the paddles.';
+    startMessage.style.position = 'absolute';
+    startMessage.style.top = '30%';
+    startMessage.style.left = '50%';
+    startMessage.style.transform = 'translate(-50%, -50%)';
+    startMessage.style.color = 'white';
+    startMessage.style.fontSize = '24px';
+    startMessage.style.fontFamily = 'Arial, sans-serif';
+    game.appendChild(startMessage);
+}
+// Reset the ball and show start message
+function resetBall() {
+    // If the ball has started and went out of bounds, update score
+    if (ballStarted) {
+        if (ballX < 0) {
+            // Right player scored
+            rightScore++;
+            rightScoreDisplay.textContent = rightScore.toString();
+        }
+        else if (ballX > game.clientWidth) {
+            // Left player scored
+            leftScore++;
+            leftScoreDisplay.textContent = leftScore.toString();
+        }
+    }
+    // Reset ball position
+    ballX = 390;
+    ballY = 240;
+    ballVX = 0;
+    ballVY = 0;
+    ball.style.left = `${ballX}px`;
+    ball.style.top = `${ballY}px`;
+    gameActive = false;
+    startMessage.style.display = 'block';
+    paddleSpeed = 5; // Reset paddle speed
+}
+// Start the ball
+function startBall() {
+    if (!gameActive) {
+        gameActive = true;
+        startMessage.style.display = 'none';
+        // Set initial velocities and directions
+        ballVX = INITIAL_BALL_VX * (Math.random() > 0.5 ? 1 : -1);
+        ballVY = INITIAL_BALL_VY * (Math.random() > 0.5 ? 1 : -1);
+        ballStarted = true;
+    }
+}
+// Update the keydown event handler to detect space
+document.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    // Start the game when space is pressed
+    if (e.code === 'Space' && !gameActive) {
+        startBall();
+        e.preventDefault(); // Prevent page scrolling
+    }
+});
+// Modify your update function to respect game state
 function update() {
-    // Move paddles
+    // Move paddles (this can always happen)
     if (keys['w'] && leftY > 0)
         leftY -= paddleSpeed;
     if (keys['s'] && leftY < game.clientHeight - 100)
@@ -97,28 +184,45 @@ function update() {
         rightY += paddleSpeed;
     leftPaddle.style.top = `${leftY}px`;
     rightPaddle.style.top = `${rightY}px`;
-    // Move ball
-    ballX += ballVX;
-    ballY += ballVY;
-    // Ball collision with top/bottom
-    if (ballY <= 0 || ballY >= game.clientHeight - 20)
-        ballVY *= -1;
-    // Ball collision with paddles
-    if (ballX <= 10 && ballY + 20 >= leftY && ballY <= leftY + 100 ||
-        ballX + 20 >= game.clientWidth - 10 && ballY + 20 >= rightY && ballY <= rightY + 100) {
-        ballVX *= -1;
+    // Only move the ball if the game is active
+    if (gameActive) {
+        // Move ball
+        ballX += ballVX;
+        ballY += ballVY;
+        // Ball collision with top/bottom
+        if (ballY <= 0 || ballY >= game.clientHeight - 20)
+            ballVY *= -1;
+        // Ball collision with paddles
+        if (ballX <= 10 && ballY + 20 >= leftY && ballY <= leftY + 100 ||
+            ballX + 20 >= game.clientWidth - 10 && ballY + 20 >= rightY && ballY <= rightY + 100) {
+            ballVX *= -1;
+            const speedMultiplier = 1.08;
+            ballVX *= speedMultiplier;
+            ballVY *= speedMultiplier;
+            paddleSpeed *= speedMultiplier;
+            // Optional: Cap the maximum speed to prevent the ball from becoming too fast
+            const maxSpeed = 15;
+            const currentSpeed = Math.sqrt(ballVX * ballVX + ballVY * ballVY);
+            if (currentSpeed > maxSpeed) {
+                const scaleFactor = maxSpeed / currentSpeed;
+                ballVX *= scaleFactor;
+                ballVY *= scaleFactor;
+            }
+        }
+        // Reset if out of bounds
+        if (ballX < -20 || ballX > game.clientWidth + 20) {
+            resetBall();
+            paddleSpeed = 5;
+        }
+        ball.style.left = `${ballX}px`;
+        ball.style.top = `${ballY}px`;
     }
-    // Reset if out of bounds (optional)
-    if (ballX < -20 || ballX > game.clientWidth + 20) {
-        ballX = 390;
-        ballY = 240;
-        ballVX *= -1;
-        ballVY *= -1;
-    }
-    ball.style.left = `${ballX}px`;
-    ball.style.top = `${ballY}px`;
     requestAnimationFrame(update);
 }
+// Initialize the game
+setupStartMessage();
+resetBall();
+setupScoreDisplays();
 update();
 //This script:
 //Uses TypeScript to ensure type safety (e.g., the ApiResponse interface)
