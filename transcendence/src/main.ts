@@ -28,6 +28,8 @@ const btn = getElement<HTMLButtonElement>('requestBtn');
 //Get the button element the user will click to trigger the request.
 
 
+
+
 // Fetch /api/hello on load
 fetch('/api/hello')
   .then(res => res.json() as Promise<ApiResponse>)
@@ -80,6 +82,29 @@ const leftPaddle = document.getElementById('left-paddle') as HTMLDivElement;
 const rightPaddle = document.getElementById('right-paddle') as HTMLDivElement;
 const ball = document.getElementById('ball') as HTMLDivElement;
 const game = document.getElementById('game') as HTMLDivElement;
+
+const toggleGifBtn = document.getElementById('toggleGifBtn') as HTMLButtonElement;
+let showingGif = true;
+
+toggleGifBtn.addEventListener('click', () => {
+  ball.innerHTML = ''; // Clear ball contents
+
+  if (showingGif) {
+    // Show white ball
+    ball.style.backgroundColor = 'white';
+  } else {
+    // Show GIF inside ball again
+    const gif = document.createElement('img');
+    gif.src = '/bird.gif';
+    gif.alt = 'birb';
+    ball.style.backgroundColor = 'transparent'; // remove white fill
+    ball.appendChild(gif);
+  }
+
+  showingGif = !showingGif;
+});
+
+
 
 let leftY = 200;
 let rightY = 200;
