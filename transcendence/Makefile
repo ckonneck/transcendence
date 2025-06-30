@@ -18,8 +18,11 @@ status:
 logs:
 	docker-compose logs --tail=20
 
-exec:
+exec-fast:
 	docker exec -it fastify bash
+
+exec-nginx:
+	docker exec -it nginx bash
 
 clean-vol:
 	docker volume prune -f
