@@ -1,0 +1,65 @@
+modsec rules tests
+
+SQL Injection Tests:
+
+# Classic SQLi payload
+curl "http://localhost/?id=1%27%20OR%20%271%27%3D%271"
+
+# Union-based SQLi
+curl "http://localhost/?id=1%20UNION%20SELECT%20null,null--"
+
+# SQLi in header
+curl -H "X-Forwarded-For: 1.1.1.1' OR '1'='1" http://localhost/
+
+
+Cross-Site Scripting (XSS):
+
+# Script tag in query param
+curl "http://localhost/?q=<script>alert(1)</script>"
+
+# Event handler injection
+curl "http://localhost/?img=<img src=x onerror=alert(1)>"
+
+
+Remote Code Execution (RCE) Patterns:
+
+# Try to execute shell command via GET
+curl "http://localhost/?cmd=ls%20-la"
+
+# PHP eval attempt
+curl "http://localhost/?exec=phpinfo()"
+
+
+Path Traversal:
+
+curl "http://localhost/?file=../../../../etc/passwd"
+
+
+ Local File Inclusion (LFI)
+
+ curl "http://localhost/?page=../../../../../../etc/hosts"
+
+
+
+ User-Agent Based:
+
+ # Triggers your custom rule for outdated curl
+curl -A "curl/7.25.0" http://localhost/
+
+
+Header Injection / Suspicious Headers
+
+# Unusual Referer
+curl -H "Referer: data:,alert(1)" http://localhost/
+
+# Injection attempt via cookie
+curl -H "Cookie: session=abc; userid=1' OR '1'='1" http://localhost/
+
+
+Directory/Extension Access (if CRS is blocking those):
+
+# Try to access .env file
+curl http://localhost/.env
+
+# Try accessing .git directory
+curl http://localhost/.git/config
