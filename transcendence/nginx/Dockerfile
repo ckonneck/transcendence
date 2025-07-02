@@ -9,13 +9,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y git && \
-    git clone https://github.com/coreruleset/coreruleset opt/crs
-
-COPY conf/nginx.conf /etc/nginx/nginx.conf
-COPY modsecurity/modsecurity.conf etc/nginx/modsec/modsecurity.conf
-COPY modsecurity/crs-setup.conf opt/crs/crs-setup.conf
-# Expose HTTP port
-EXPOSE 80
+    git clone https://github.com/coreruleset/coreruleset opt/crs 
+    
+COPY /nginx/conf/nginx.conf /etc/nginx/nginx.conf
+COPY /nginx/modsecurity/modsecurity.conf etc/nginx/modsec/modsecurity.conf
+COPY /nginx/modsecurity/crs-setup.conf opt/crs/crs-setup.conf
+COPY /vault/pong.local.crt /etc/nginx/certs/
+COPY /vault/pong.local.key /etc/nginx/certs/
+# Expose HTTP/S port
+EXPOSE 80 8443
 
 # Start Nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]
+
+
+#possibly didnt load the certs correctly yet. recheck. also recheck if vault is still ok

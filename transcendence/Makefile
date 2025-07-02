@@ -24,6 +24,9 @@ exec-fast:
 exec-nginx:
 	docker exec -it nginx bash
 
+# exec-vault:
+# 	docker exec -it vault bash
+
 clean-vol:
 	docker volume prune -f
 
@@ -63,4 +66,7 @@ modsec-report:
 	grep -B10 -E 'id \"[0-9]+\"' /var/log/modsec_audit.log | grep -oE '^---[A-Za-z0-9]+---' | sort | uniq | wc -l; \
 	echo ''; \
 	echo '💡 Tip: Use these rule IDs to look them up in CRS rules folder.'"
-
+vaultcmd:
+	docker exec -it vault vault $(filter-out $@,$(MAKECMDGOALS))
+%:
+	@:

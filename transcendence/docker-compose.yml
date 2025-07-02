@@ -5,25 +5,35 @@ services:
     ports:
       - "3000:3000"
   nginx:
-    build: ./nginx
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
     container_name: nginx
     ports:
       - "80:80"
+      - "8443:8443"   # for HTTPS
     volumes:
       - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/modsecurity:/etc/nginx/modsec:ro
   vault:
-    image: hashicorp/vault:1.20.0
     container_name: vault
+    build:
+      context: .
+      dockerfile: vault/Dockerfile
     ports:
       - "8200:8200"
     cap_add:
       - IPC_LOCK
     volumes:
-      - ./vault.hcl:/vault/vault.hcl:ro
-    command: vault server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
+      - vault-data:/vault/data
+      - ./vault/vault.hcl:/vault/config/vault.hcl:ro
+    command: vault server -config=/vault/config/vault.hcl
+      # command: vault server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
       #dev mode, also listen to only http until we have certificates done
     environment:
-      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_ADDR: http://127.0.0.1:8200
       #accessible through localhost:8200, token, pw: root
       #doesn't save shit in dev mode btw
+volumes:
+  vault-data:
+
