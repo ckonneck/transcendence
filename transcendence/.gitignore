@@ -4,3 +4,4 @@ secretstemp/
 vault/
 .vscode/
 .env
+./vault/init/vault-init.json

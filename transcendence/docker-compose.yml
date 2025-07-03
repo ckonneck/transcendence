@@ -30,14 +30,8 @@ services:
       - ./vault/init:/vault/init
       - ./vault/init/vault-auto-init-unseal.sh:/usr/local/bin/vault-auto-init-unseal.sh:ro
       - ./:/transcendence
-    command: >
-      sh -c "
-        vault server -config=/vault/config/vault.hcl & 
-        sleep 5 && 
-        /usr/local/bin/vault-auto-init-unseal.sh"
-
-      # command: vault server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
-      #dev mode, also listen to only http until we have certificates done
+    #command: vault server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
+    #dev mode, also listen to only http until we have certificates done
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
       #accessible through localhost:8200, token, pw: root
