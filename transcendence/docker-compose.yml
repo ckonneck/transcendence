@@ -27,7 +27,15 @@ services:
     volumes:
       - vault-data:/vault/data
       - ./vault/vault.hcl:/vault/config/vault.hcl:ro
-    command: vault server -config=/vault/config/vault.hcl
+      - ./vault/init:/vault/init
+      - ./vault/init/vault-auto-init-unseal.sh:/usr/local/bin/vault-auto-init-unseal.sh:ro
+      - ./:/transcendence
+    command: >
+      sh -c "
+        vault server -config=/vault/config/vault.hcl & 
+        sleep 5 && 
+        /usr/local/bin/vault-auto-init-unseal.sh"
+
       # command: vault server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
       #dev mode, also listen to only http until we have certificates done
     environment:

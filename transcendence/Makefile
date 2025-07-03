@@ -24,8 +24,8 @@ exec-fast:
 exec-nginx:
 	docker exec -it nginx bash
 
-# exec-vault:
-# 	docker exec -it vault bash
+exec-vault:
+	docker exec -it vault sh
 
 clean-vol:
 	docker volume prune -f
