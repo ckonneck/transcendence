@@ -3,11 +3,11 @@ npm-debug.log
 secretstemp/
 .vscode/
 .env
-/vault/init/ca_cert.ct
+/vault/init/ca_cert.crt
 /vault/init/cert.json
 /vault/init/pong.localhost.crt
 /vault/init/pong.localhost.key
-/vault-init.json
+/vault/init/vault-init.json
 /vault/backup
 /vault/vault-data
 
