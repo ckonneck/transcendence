@@ -92,4 +92,25 @@ echo "$KEY" > "$KEY_PATH"
 
 echo "Certificate and key generated: $CERT_PATH, $KEY_PATH"
 
+# --- Enable KV v2 secret engine for user data ---
+echo "Enabling KV v2 secrets engine at 'secret/'..."
+vault secrets enable -path=secret kv-v2 || echo "KV secret engine already enabled at secret/."
+
+# --- Create Vault policy for app to write user data ---
+cat <<EOF > /vault/init/user-policy.hcl
+path "secret/data/users/*" {
+  capabilities = ["create", "update", "read"]
+}
+EOF
+
+echo "Writing user-policy..."
+vault policy write user-policy /vault/init/user-policy.hcl
+
+# Optional: Create AppRole for your backend to use (instead of root token)
+# echo "Creating AppRole for backend..."
+# vault auth enable approle || echo "AppRole auth already enabled."
+# vault write auth/approle/role/backend-role token_policies="user-policy" token_ttl=1h token_max_ttl=4h
+# echo "AppRole created: backend-role"
+
+echo "Vault KV and policies setup complete."
 

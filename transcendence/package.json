@@ -1,5 +1,10 @@
 {
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-vault": "^0.10.5",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0",
     "typescript": "^5.8.3"
   }
 }

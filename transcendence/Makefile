@@ -16,7 +16,7 @@ status:
 	docker ps
 
 logs:
-	docker-compose logs --tail=20
+	docker compose logs --tail=20
 
 exec-fast:
 	docker exec -it fastify bash

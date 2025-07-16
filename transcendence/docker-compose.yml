@@ -4,6 +4,8 @@ services:
     container_name: fastify
     ports:
       - "3000:3000"
+    volumes:
+      - ./vault/init:/vault/init  # Required for .env access
   nginx:
     build:
       context: .
