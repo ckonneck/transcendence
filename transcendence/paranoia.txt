@@ -63,3 +63,8 @@ curl http://localhost/.env
 
 # Try accessing .git directory
 curl http://localhost/.git/config
+
+
+
+#npm init -y
+#npm install fastify speakeasy qrcode

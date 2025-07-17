@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Register User</title>
+  <title>Transcendence Auth</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen space-y-12">
+
+  <!-- REGISTER -->
   <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md shadow-lg">
     <h1 class="text-2xl mb-4 font-bold text-center">Register</h1>
+
+    <label class="block mb-2 text-center">
+      <input type="checkbox" id="enable2FA" class="mr-2"> Enable 2FA
+    </label>
 
     <form id="registerForm" class="space-y-4">
       <input type="text" id="username" placeholder="Username" required class="w-full px-4 py-2 rounded bg-gray-700 text-white">
@@ -17,27 +23,159 @@
       </button>
     </form>
 
+    <div id="2faSection" class="hidden space-y-2 mt-4">
+      <div id="qrCodeImage" class="text-center"></div>
+      <input type="text" id="totpToken" placeholder="Enter 2FA Code" class="w-full px-4 py-2 rounded bg-gray-700 text-white">
+      <button id="submit2FA" class="w-full bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">
+        Submit 2FA Token
+      </button>
+    </div>
+
     <div id="registerResult" class="mt-4 text-sm text-green-400 text-center"></div>
   </div>
 
+  <!-- FETCH -->
+  <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md shadow-lg">
+    <h2 class="text-xl mb-4 font-bold text-center">Fetch Stored Hash</h2>
+
+    <form id="fetchForm" class="space-y-4">
+      <input type="text" id="fetchUsername" placeholder="Username to fetch" required class="w-full px-4 py-2 rounded bg-gray-700 text-white">
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+        Fetch Hash
+      </button>
+    </form>
+
+    <div id="fetchResult" class="mt-4 text-sm text-yellow-400 text-center"></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md shadow-lg">
+    <h2 class="text-xl mb-4 font-bold text-center">Login</h2>
+
+    <form id="loginForm" class="space-y-4">
+      <input type="text" id="loginUsername" placeholder="Login Username" required class="w-full px-4 py-2 rounded bg-gray-700 text-white">
+      <input type="password" id="loginPassword" placeholder="Login Password" required class="w-full px-4 py-2 rounded bg-gray-700 text-white">
+      <div id="login2faSection" class="hidden">
+        <input type="text" id="loginTotpToken" placeholder="2FA Code (if required)" class="w-full px-4 py-2 rounded bg-gray-700 text-white mt-2">
+      </div>
+      <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded">
+        Login
+      </button>
+    </form>
+
+    <div id="loginResult" class="mt-4 text-sm text-blue-400 text-center"></div>
+  </div>
+
+  <!-- SCRIPT -->
   <script>
+    let tempSecret = null;
+
     const form = document.getElementById("registerForm");
     const result = document.getElementById("registerResult");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      const username = document.getElementById("username").value;
+      const enable2FA = document.getElementById("enable2FA").checked;
 
+      if (enable2FA) {
+        const res = await fetch("http://localhost:3000/register/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, enable2FA: true }),
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          result.textContent = "❌ Failed to start 2FA setup: " + (data.error || "Unknown error");
+          return;
+        }
+
+        document.getElementById("2faSection").classList.remove("hidden");
+        document.getElementById("qrCodeImage").innerHTML = `<img src="${data.qrCode}" alt="QR Code" class="mx-auto">`;
+        tempSecret = data.tempSecret;
+        result.textContent = "📲 Scan the QR code and enter your 2FA code.";
+      } else {
+        await finishRegistration({ username, password: document.getElementById("password").value });
+      }
+    });
+
+    document.getElementById("submit2FA").addEventListener("click", async () => {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
+      const token = document.getElementById("totpToken").value;
 
-      const res = await fetch("http://localhost:3000/register", {
+      if (!token || !tempSecret) {
+        result.textContent = "❌ Missing 2FA token or secret.";
+        return;
+      }
+
+      await finishRegistration({ username, password, enable2FA: true, token });
+    });
+
+    async function finishRegistration(payload) {
+      const res = await fetch("http://localhost:3000/register/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-      result.textContent = data.success ? "✅ User registered!" : "❌ Error: " + (data.error || "Unknown error");
+      result.textContent = data.success
+        ? "✅ Registration complete!"
+        : "❌ Error: " + (data.error || "Unknown error");
+
+      if (data.success) {
+        document.getElementById("2faSection").classList.add("hidden");
+        document.getElementById("qrCodeImage").innerHTML = "";
+        document.getElementById("totpToken").value = "";
+        tempSecret = null;
+      }
+    }
+
+    // LOGIN FORM
+    const loginForm = document.getElementById("loginForm");
+    const loginResult = document.getElementById("loginResult");
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("loginUsername").value;
+      const password = document.getElementById("loginPassword").value;
+      const token = document.getElementById("loginTotpToken").value;
+
+      const res = await fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, token }),
+      });
+
+      const data = await res.json();
+
+      loginResult.textContent = data.success
+        ? "✅ Logged in!"
+        : "❌ " + (data.error || "Login failed");
+
+      if (!data.success && data.error.includes("2FA")) {
+        document.getElementById("login2faSection").classList.remove("hidden");
+      }
+    });
+
+    // FETCH HASH FORM
+    const fetchForm = document.getElementById("fetchForm");
+    const fetchResult = document.getElementById("fetchResult");
+
+    fetchForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fetchUsername = document.getElementById("fetchUsername").value;
+
+      const res = await fetch(`http://localhost:3000/user/${fetchUsername}`);
+      const data = await res.json();
+
+      if (data.success) {
+        fetchResult.textContent = `🔐 Hash: ${data.passwordHash}`;
+      } else {
+        fetchResult.textContent = `❌ Error: ${data.error || "User not found"}`;
+      }
     });
   </script>
 </body>

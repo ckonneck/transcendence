@@ -8,9 +8,27 @@ const vault = require('node-vault')({
   endpoint: process.env.VAULT_ADDR || 'http://vault:8200',
   token: process.env.VAULT_TOKEN,
 });
+//REGISTERFORM
+const secrets = {}; // Temporary memory store: { [username]: base32secret }
 
-fastify.post('/register', async (request, reply) => {
-  const { username, password } = request.body;
+fastify.post('/register/init', async (request, reply) => {
+  const { username, enable2FA } = request.body;
+
+  if (!username) return reply.code(400).send({ success: false, error: 'Missing username' });
+
+  if (enable2FA) {
+    const secret = speakeasy.generateSecret({ name: `Transcendence (${username})` });
+    secrets[username] = secret.base32;
+
+    const qrCode = await qrcode.toDataURL(secret.otpauth_url);
+    return reply.send({ success: true, qrCode, tempSecret: secret.base32 });
+  }
+
+  return reply.send({ success: true }); // Proceed with registration without 2FA
+});
+
+fastify.post('/register/complete', async (request, reply) => {
+  const { username, password, token, enable2FA } = request.body;
 
   if (!username || !password) {
     return reply.code(400).send({ success: false, error: 'Missing fields' });
@@ -18,12 +36,37 @@ fastify.post('/register', async (request, reply) => {
 
   try {
     const passwordHash = await bcrypt.hash(password, 10);
+    let is2FAEnabled = false;
+    let twoFASecret;
+
+    if (enable2FA) {
+      twoFASecret = secrets[username];
+      if (!twoFASecret) {
+        return reply.code(400).send({ success: false, error: '2FA setup was not initiated' });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: twoFASecret,
+        encoding: 'base32',
+        token,
+        window: 1,
+      });
+
+      if (!verified) {
+        return reply.code(400).send({ success: false, error: 'Invalid 2FA token' });
+      }
+
+      is2FAEnabled = true;
+      delete secrets[username]; // Clean up after registration
+    }
 
     const vaultPath = `secret/data/users/${username}`;
     await vault.write(vaultPath, {
       data: {
         username,
-        passwordHash
+        passwordHash,
+        is2FAEnabled,
+        twoFASecret,
       }
     });
 
@@ -38,33 +81,62 @@ fastify.post('/register', async (request, reply) => {
 });
 
 
-let currentSecret = null;
-fastify.get('/2fa/setup', async (req, reply) => {
-  const secret = speakeasy.generateSecret({
-    name: 'MyCoolApp (example@site.com)', // what shows up in Google Auth
-  });
+//LOGINFORM
+fastify.post('/login', async (request, reply) => {
+  const { username, password, token } = request.body;
 
-  currentSecret = secret.base32; // we'll use this to verify later
+  try {
+    const vaultPath = `secret/data/users/${username}`;
+    const result = await vault.read(vaultPath);
+    const user = result.data.data;
 
-  const qr = await qrcode.toDataURL(secret.otpauth_url);
-  return reply.send({ qrCode: qr, secret: secret.base32 });
+    const match = await bcrypt.compare(password, user.passwordHash);
+    if (!match) {
+      return reply.code(401).send({ success: false, error: '❌ Invalid password' });
+    }
+
+    if (user.is2FAEnabled) {
+      if (!token) {
+        return reply.code(401).send({ success: false, error: '2FA token required' });
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFASecret,
+        encoding: 'base32',
+        token,
+        window: 1,
+      });
+
+      if (!verified) {
+        return reply.code(401).send({ success: false, error: '❌ Invalid 2FA token' });
+      }
+    }
+
+    return reply.send({ success: true, message: '✅ Login successful' });
+  } catch (err) {
+    return reply.code(404).send({ success: false, error: '❌ User not found' });
+  }
 });
 
-// POST /2fa/verify → checks submitted code
-fastify.post('/2fa/verify', async (req, reply) => {
-  const { token } = req.body;
 
-  const verified = speakeasy.totp.verify({
-    secret: currentSecret,
-    encoding: 'base32',
-    token,
-    window: 1, // allow +/- 30 seconds
-  });
+//GETHASHFORM
+fastify.get('/user/:username', async (request, reply) => {
+  const { username } = request.params;
 
-  reply.send({ verified });
+  try {
+    const vaultPath = `secret/data/users/${username}`;
+    const result = await vault.read(vaultPath);
+    const { passwordHash } = result.data.data;
+
+    return reply.send({ success: true, passwordHash });
+  } catch (err) {
+    console.error("Vault read failed:", err.response?.body || err.message || err);
+    return reply.code(404).send({
+      success: false,
+      error: 'Vault read failed or user not found',
+    });
+  }
 });
-
-
 
 
 // Serve the frontend (HTML) (index.html)
