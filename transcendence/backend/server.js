@@ -1,4 +1,11 @@
-const fastify = require('fastify')({ logger: true }) //imports fastify and creates server
+const fs = require('fs');
+const fastify = require('fastify')({
+  logger: true,
+  https: {
+    key: fs.readFileSync('/etc/ssl/private/fastify.key'),
+    cert: fs.readFileSync('/etc/ssl/certs/fastify.crt'),
+  }
+}); //imports fastify and creates server
 const path = require('path')                        // Loads Node.js’s built-in path module. Used to resolve file paths in a cross-platform way.
 const fastifyStatic = require('@fastify/static') //This plugin lets Fastify serve static files (like .html, .js, .css) from the file system.
 const speakeasy = require('speakeasy');

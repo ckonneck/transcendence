@@ -64,3 +64,16 @@ vault operator unseal $(cat /vault/unseal.key)
 export VAULT_TOKEN=$(cat /vault/root.token)
 
 exec vault server -config=/vault/config/vault.hcl
+
+
+
+
+
+
+
+
+
+NEW
+//currently :8443 doesnt reply to any of the api calls because they just respond to :3000 calls.
+:3000 is now also https, so maybe its fine?
+//MAKE NEW SEPERATE CERTS FOR FASTIFY NGINX CONNECTION
