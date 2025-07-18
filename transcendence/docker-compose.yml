@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: vault/Dockerfile
     ports:
-      - "8200:8200"
+      - "8200:8200" #disable for prod so no one access it, but internal communications still work between services.
     cap_add:
       - IPC_LOCK
     volumes:
