@@ -22,7 +22,6 @@ done
 echo "logging in with root token..."
 # Login with root token
 ROOT_TOKEN=$(jq -r '.root_token' $INIT_FILE)
-export VAULT_TOKEN=$ROOT_TOKEN
 echo "Logged in with root token."
 
 UNSEAL_KEY_1=$(jq -r '.unseal_keys_b64[0]' /vault/init/vault-init.json)
@@ -35,6 +34,42 @@ VAULT_UNSEAL_KEY_1=$UNSEAL_KEY_1
 VAULT_UNSEAL_KEY_2=$UNSEAL_KEY_2
 VAULT_UNSEAL_KEY_3=$UNSEAL_KEY_3
 EOF
+export VAULT_TOKEN=$ROOT_TOKEN
+
+
+# --- Enable AppRole Auth Method ---
+echo "Enabling AppRole auth method..."
+vault auth enable approle || echo "AppRole already enabled."
+
+echo "Enabling KV v2 secrets engine at 'secret/'..."
+vault secrets enable -path=secret kv-v2 || echo "KV secret engine already enabled at secret/."
+
+
+# --- Create Vault policy for AppRole ---
+cat <<EOF > /vault/init/user-policy.hcl
+path "secret/data/users/*" {
+  capabilities = ["create", "update", "read"]
+}
+path "pki/*" {
+  capabilities = ["read", "create", "update", "list"]
+}
+path "sys/mounts" {
+  capabilities = ["read", "list"]
+}
+path "pki/roles/https-cert-role" {
+  capabilities = ["read", "create", "update"]
+}
+EOF
+
+echo "Writing user-policy..."
+vault policy write user-policy /vault/init/user-policy.hcl || echo "policy has already been written."
+
+# --- Create AppRole tied to the policy ---
+vault write auth/approle/role/backend-role \
+    token_policies="user-policy" \
+    token_ttl=1h \
+    token_max_ttl=4h
+
 
 cat /vault/init/.env >> /transcendence/.env
 rm /vault/init/.env # && rm /vault/init/vault-init.json # add in prod maybe. maybe risky. maybe unnecessary, idk
@@ -92,25 +127,22 @@ echo "$KEY" > "$KEY_PATH"
 
 echo "Certificate and key generated: $CERT_PATH, $KEY_PATH"
 
-# --- Enable KV v2 secret engine for user data ---
-echo "Enabling KV v2 secrets engine at 'secret/'..."
-vault secrets enable -path=secret kv-v2 || echo "KV secret engine already enabled at secret/."
 
-# --- Create Vault policy for app to write user data ---
-cat <<EOF > /vault/init/user-policy.hcl
-path "secret/data/users/*" {
-  capabilities = ["create", "update", "read"]
-}
+# --- Fetch Role ID and Secret ID ---
+export ROLE_ID=$(vault read -field=role_id auth/approle/role/backend-role/role-id)
+export SECRET_ID=$(vault write -f -field=secret_id auth/approle/role/backend-role/secret-id)
+
+echo "catting EVEN harder rn."
+cat << EOF >> /vault/init/.env
+VAULT_ROLE_ID=$ROLE_ID
+VAULT_SECRET_ID=$SECRET_ID
 EOF
+echo "AppRole credentials retrieved."
 
-echo "Writing user-policy..."
-vault policy write user-policy /vault/init/user-policy.hcl
-
-# Optional: Create AppRole for your backend to use (instead of root token)
-# echo "Creating AppRole for backend..."
-# vault auth enable approle || echo "AppRole auth already enabled."
-# vault write auth/approle/role/backend-role token_policies="user-policy" token_ttl=1h token_max_ttl=4h
-# echo "AppRole created: backend-role"
+# --- Authenticate using AppRole ---
+VAULT_TOKEN=$(vault write -field=token auth/approle/login role_id="$ROLE_ID" secret_id="$SECRET_ID")
+echo "Logged in with AppRole token."
 
 echo "Vault KV and policies setup complete."
 
+#not optional anymore, i need to enable approle, make policies, go into a deepdive of how it interacts with each other to learn more deeply about it

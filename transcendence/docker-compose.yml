@@ -37,8 +37,9 @@ services:
     #dev mode, also listen to only http until we have certificates done
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
+      # VAULT_ROLE_ID: $VAULT_ROLE_ID
+      # VAULT_SECRET_ID: $VAULT_SECRET_ID
       #accessible through localhost:8200, token, pw: root
       #doesn't save shit in dev mode btw
 volumes:
   vault-data:
-

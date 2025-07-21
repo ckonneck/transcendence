@@ -77,3 +77,5 @@ NEW
 //currently :8443 doesnt reply to any of the api calls because they just respond to :3000 calls.
 :3000 is now also https, so maybe its fine?
 //MAKE NEW SEPERATE CERTS FOR FASTIFY NGINX CONNECTION
+//approle. many approles. important.
+NO MORE ROOT

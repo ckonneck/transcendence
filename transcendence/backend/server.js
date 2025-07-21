@@ -11,10 +11,21 @@ const fastifyStatic = require('@fastify/static') //This plugin lets Fastify serv
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const bcrypt = require('bcrypt');
-const vault = require('node-vault')({
+const vaultLib = require('node-vault');
+
+const vault = vaultLib({
   endpoint: process.env.VAULT_ADDR || 'http://vault:8200',
-  token: process.env.VAULT_TOKEN,
 });
+
+const loginWithAppRole = async () => {
+  const result = await vault.write('auth/approle/login', {
+    role_id: process.env.VAULT_ROLE_ID,
+    secret_id: process.env.VAULT_SECRET_ID,
+  });
+
+  vault.token = result.auth.client_token;
+};
+
 //REGISTERFORM
 const secrets = {}; // Temporary memory store: { [username]: base32secret }
 
@@ -167,10 +178,15 @@ fastify.get('/api/request', async (request, reply) => {
   return { message: 'Request for a pizza accepted.\nPlease wait 3-5 Business days for delivery.' } //same as above, for button
 })
 
-fastify.listen({ port: 3000, host: '0.0.0.0' }, err => { //makes the server accessible, if startup fails, logs it
-  if (err) {
-    fastify.log.error(err)
-    process.exit(1)
+const start = async () => {
+  try {
+    await loginWithAppRole();
+    await fastify.listen({ port: 3000, host: '0.0.0.0' });
+    console.log('Server started!');
+  } catch (err) {
+    console.error('Failed to start:', err);
+    process.exit(1);
   }
-})
+};
 
+start();
